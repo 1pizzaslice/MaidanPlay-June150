@@ -332,7 +332,7 @@ export function OpsApp() {
   const [route, setRoute] = useState<Route>({ name: "dashboard" });
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
-  const [dashboardTab, setDashboardTab] = useState<"batch" | "coach" | "emp" | "org">("batch");
+  const [dashboardTab, setDashboardTab] = useState<"batch" | "coach" | "org">("batch");
   const [detailTab, setDetailTab] = useState<"details" | "confirm" | "amit" | "akash">("details");
 
   useEffect(() => {
@@ -651,9 +651,9 @@ export function OpsApp() {
             <FunnelChip label="Green" count={stageCounts.done} status="g" />
           </div>
           <div className="segmented">
-            {(["batch", "coach", "emp", "org"] as const).map((tab) => (
+            {(["batch", "coach", "org"] as const).map((tab) => (
               <button key={tab} className={dashboardTab === tab ? "active" : ""} onClick={() => setDashboardTab(tab)}>
-                {tab === "emp" ? "Employee" : tab[0].toUpperCase() + tab.slice(1)}
+                {tab[0].toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -710,22 +710,6 @@ export function OpsApp() {
               role="Coach"
               stats={tally(bootstrap.students.filter((student) => coachOf(appConfig, student.batch) === coach), bootstrap.verify)}
               onClick={() => go(`#/group/coach/${encodeURIComponent(coach)}`)}
-            />
-          ))}
-        </div>
-      );
-    }
-    if (dashboardTab === "emp") {
-      const employees = [...new Set([...appConfig.org.employees, ...Object.values(appConfig.batchcfg).flatMap((cfg) => cfg.employees)])];
-      return (
-        <div className="cards">
-          {employees.map((employee) => (
-            <StatCard
-              key={employee}
-              name={employee}
-              role="Maidan Employee"
-              stats={tally(bootstrap.students.filter((student) => empList(appConfig, student.batch).includes(employee)), bootstrap.verify)}
-              onClick={() => go(`#/group/emp/${encodeURIComponent(employee)}`)}
             />
           ))}
         </div>
