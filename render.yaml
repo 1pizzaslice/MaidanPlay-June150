@@ -1,0 +1,28 @@
+# Render Blueprint for the MaidanPlay-June150 backend (FastAPI).
+# The Next.js frontend is deployed separately on Vercel — see README "Deploy".
+#
+# To use: in the Render dashboard choose "New +" -> "Blueprint", point it at
+# this repo, and Render will provision the service below. Fill in the env vars
+# marked `sync: false` (DATABASE_URL, JUNE_ONE50_CORS_ORIGINS) in the dashboard.
+services:
+  - type: web
+    name: maidanplay-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      # Supabase / Postgres connection string. Set in the dashboard (secret).
+      - key: DATABASE_URL
+        sync: false
+      # HMAC secret for bearer tokens. Render generates a strong value once.
+      - key: JUNE_ONE50_SECRET
+        generateValue: true
+      # Comma-separated allowed origins — set to your Vercel frontend URL(s),
+      # e.g. https://maidanplay.vercel.app
+      - key: JUNE_ONE50_CORS_ORIGINS
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.6"
