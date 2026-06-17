@@ -41,19 +41,13 @@ ROLE_LABEL = {
 DEFAULT_SEED_PASSWORD = "MaidanPlay@2026"
 
 USERS = [
-    {"name": "Pranjal", "email": "pranjal@maidanplay.com", "mobile": "6386881890", "access": "edit", "role": "employee", "batch": "Junior"},
-    {"name": "Sanjana", "email": "sanjana@maidanplay.com", "mobile": "6378537621", "access": "edit", "role": "employee", "batch": "Toddlers"},
-    {"name": "Aryan", "email": "aryan@maidanplay.com", "mobile": "6377859921", "access": "edit", "role": "employee", "batch": "Sub Junior"},
     {"name": "Vasu", "email": "yuvrajchawla@maidanplay.com", "mobile": "9810575510", "access": "edit", "role": "amit"},
     {"name": "Athar", "email": "mdathar@maidanplay.com", "mobile": "", "access": "edit", "role": "kush"},
-    {"name": "Kush", "email": "kush@maidanplay.com", "mobile": "9599126646", "access": "edit", "role": "kush"},
-    {"name": "Daksh", "email": "daksh@maidanplay.com", "mobile": "8800587974", "access": "confirm", "role": "coach"},
-    {"name": "Eeshan", "email": "eeshan@maidanplay.com", "mobile": "7303852603", "access": "confirm", "role": "coach"},
-    {"name": "Adi", "email": "adi@maidanplay.com", "mobile": "8810392739", "access": "confirm", "role": "coach"},
-    {"name": "Amit", "email": "amit@maidanplay.com", "mobile": "7703832814", "access": "edit", "role": "amit"},
-    {"name": "Akash", "email": "akash@maidanplay.com", "mobile": "8826204541", "access": "edit", "role": "akash"},
-    {"name": "Abhimanyu", "email": "abhimanyu@maidanplay.com", "mobile": "9013603656", "access": "edit", "role": "admin"},
-    {"name": "Ruchir", "email": "ruchir@maidanplay.com", "mobile": "9939180058", "access": "edit", "role": "admin"},
+    {"name": "Kush", "email": "kushagrasarin@maidanplay.com", "mobile": "9599126646", "access": "edit", "role": "kush"},
+    {"name": "Amit", "email": "amitmishra@maidanplay.com", "mobile": "7703832814", "access": "edit", "role": "amit"},
+    {"name": "Akash", "email": "akashsahay@maidanplay.com", "mobile": "8826204541", "access": "edit", "role": "akash"},
+    {"name": "Abhimanyu", "email": "abhimanyusingh@maidanplay.com", "mobile": "9013603656", "access": "edit", "role": "admin"},
+    {"name": "Ruchir", "email": "ruchirprasoon@maidanplay.com", "mobile": "9939180058", "access": "edit", "role": "admin"},
 ]
 
 SUPER = ["Akash", "Abhimanyu", "Ruchir"]
