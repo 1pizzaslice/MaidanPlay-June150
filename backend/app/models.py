@@ -59,6 +59,10 @@ class SendBackRequest(BaseModel):
     note: str = ""
 
 
+class CommentRequest(BaseModel):
+    text: str = Field(min_length=1)
+
+
 class StudentPayload(BaseModel):
     id: str
     first: str | None = None

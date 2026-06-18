@@ -399,10 +399,15 @@ def stage_order(stage: str) -> int:
     }.get(stage, 0)
 
 
+def has_comment(rec: dict[str, Any]) -> bool:
+    return bool((rec.get("comment") or {}).get("text"))
+
+
 def status_of(rec: dict[str, Any]) -> str:
     stage = stage_of(rec)
     if stage == STAGE["DONE"]:
-        return "g"
+        # A super-admin comment holds the profile back from going green.
+        return "p" if has_comment(rec) else "g"
     if stage == STAGE["DRAFT"]:
         return "r"
     return "p"

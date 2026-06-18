@@ -58,6 +58,7 @@ export type Workflow = {
   amit?: Record<string, unknown>;
   akash?: Record<string, unknown>;
   kyp?: Record<string, unknown> & { published?: boolean; publishedBy?: string; publishedAt?: string };
+  comment?: { text: string; by: string; at: string } | null;
   submittedBy?: string | null;
   submittedAt?: string | null;
   amitBy?: string | null;

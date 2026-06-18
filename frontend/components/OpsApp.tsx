@@ -57,9 +57,14 @@ function stageOf(record?: Workflow): Stage {
   return (record?.stage || "draft") as Stage;
 }
 
+function hasComment(record?: Workflow): boolean {
+  return Boolean(record?.comment?.text);
+}
+
 function statusOf(record?: Workflow): "r" | "p" | "g" {
   const stage = stageOf(record);
-  if (stage === "approved") return "g";
+  // A super-admin comment holds the profile back from going green.
+  if (stage === "approved") return hasComment(record) ? "p" : "g";
   if (stage === "draft") return "r";
   return "p";
 }
@@ -333,7 +338,7 @@ export function OpsApp() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [dashboardTab, setDashboardTab] = useState<"batch" | "coach" | "org">("batch");
-  const [detailTab, setDetailTab] = useState<"details" | "confirm" | "amit" | "akash">("details");
+  const [detailTab, setDetailTab] = useState<"details" | "confirm" | "kyp" | "amit" | "akash">("details");
 
   useEffect(() => {
     setRoute(parseRoute());
@@ -434,6 +439,29 @@ export function OpsApp() {
         body: body ? JSON.stringify(body) : undefined
       }),
       success
+    );
+    if (result) setRecord(studentId, result.record);
+  }
+
+  async function setComment(studentId: string, text: string) {
+    const result = await runMutation(
+      api<{ ok: boolean; record: Workflow }>(`/workflows/${studentId}/comment`, {
+        token,
+        method: "POST",
+        body: JSON.stringify({ text })
+      }),
+      "Comment added"
+    );
+    if (result) setRecord(studentId, result.record);
+  }
+
+  async function removeComment(studentId: string) {
+    const result = await runMutation(
+      api<{ ok: boolean; record: Workflow }>(`/workflows/${studentId}/comment`, {
+        token,
+        method: "DELETE"
+      }),
+      "Comment removed"
     );
     if (result) setRecord(studentId, result.record);
   }
@@ -905,7 +933,7 @@ export function OpsApp() {
     const record = bootstrap.verify[student.id] || {};
     const stage = stageOf(record);
     const status = statusOf(record);
-    const activeTab: "details" | "confirm" | "amit" | "akash" = detailTab;
+    const activeTab: "details" | "confirm" | "kyp" | "amit" | "akash" = detailTab;
     return (
       <>
         <AppBar title={fullName(student)} sub="Verify & Approve" back="history" />
@@ -919,6 +947,7 @@ export function OpsApp() {
             </div>
             <div className={`statebadge ${status}`}>{appConfig.stageLabel[stage]}</div>
           </div>
+          <CommentBlock student={student} record={record} />
           <div className="eyebrow">Approval Flow</div>
           <Stepper record={record} />
           {record.sentBackBy ? (
@@ -928,15 +957,16 @@ export function OpsApp() {
             </div>
           ) : null}
           <div className="dtabs">
-            {(["details", "confirm", "amit", "akash"] as const).map((tab) => (
+            {(["details", "confirm", "kyp", "amit", "akash"] as const).map((tab) => (
               <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setDetailTab(tab)}>
-                {tab}
+                {tab === "kyp" ? "KYP" : tab}
               </button>
             ))}
           </div>
           <div className="dtabBody">
             {activeTab === "details" ? <DetailsTab student={student} /> : null}
             {activeTab === "confirm" ? <ConfirmTab student={student} record={record} /> : null}
+            {activeTab === "kyp" ? <KypTab student={student} record={record} /> : null}
             {activeTab === "amit" ? <StageTab student={student} record={record} fields={appConfig.amitFields} section="amit" /> : null}
             {activeTab === "akash" ? <StageTab student={student} record={record} fields={appConfig.akashFields} section="akash" /> : null}
           </div>
@@ -992,7 +1022,6 @@ export function OpsApp() {
 
   function ConfirmTab({ student, record }: { student: Student; record: Workflow }) {
     const editable = canFillConfirm(user, student, record, appConfig);
-    const kypEditable = canKyp(user, appConfig);
     return (
       <>
         <div className="vlist">
@@ -1002,6 +1031,16 @@ export function OpsApp() {
           ))}
         </div>
         <ApproveBlock student={student} record={record} which="confirm" />
+      </>
+    );
+  }
+
+  function KypTab({ student, record }: { student: Student; record: Workflow }) {
+    const kypEditable = canKyp(user, appConfig);
+    const done = sectionDone(record, appConfig.kypFields, "kyp");
+    const filled = appConfig.kypFields.filter((field) => valueGreen(record, field, "kyp")).length;
+    return (
+      <>
         <div className="eyebrow kypHead">Know Your Player - Coach</div>
         <div className="vlist">
           {appConfig.kypFields.map((field) => (
@@ -1009,13 +1048,58 @@ export function OpsApp() {
           ))}
         </div>
         <button
-          className={`btnClose ${sectionDone(record, appConfig.kypFields, "kyp") ? "ready" : "notready"}`}
-          disabled={!sectionDone(record, appConfig.kypFields, "kyp") || !kypEditable}
+          className={`btnClose ${done ? "ready" : "notready"}`}
+          disabled={!done || !kypEditable}
           onClick={() => simpleWorkflow(student.id, "kyp/publish", undefined, "KYP published")}
         >
-          {record.kyp?.published ? "Published - update" : `Know Your Player (${appConfig.kypFields.filter((field) => valueGreen(record, field, "kyp")).length}/${appConfig.kypFields.length})`}
+          {record.kyp?.published ? "Published - update" : `Know Your Player (${filled}/${appConfig.kypFields.length})`}
         </button>
       </>
+    );
+  }
+
+  function CommentBlock({ student, record }: { student: Student; record: Workflow }) {
+    const canComment = isSuper(user, appConfig);
+    const comment = record.comment;
+    if (!comment && !canComment) return null;
+    if (comment) {
+      return (
+        <div className="sentback">
+          <div className="eyebrow">Super-admin hold - profile cannot go green</div>
+          <div>{comment.text}</div>
+          <div className="vsub">
+            {comment.by}
+            {comment.at ? ` - ${comment.at}` : ""}
+          </div>
+          {canComment ? (
+            <div className="approw">
+              <button
+                className="btnSoft"
+                onClick={() => {
+                  const next = window.prompt("Edit comment", comment.text);
+                  if (next && next.trim()) setComment(student.id, next.trim());
+                }}
+              >
+                Edit
+              </button>
+              <button className="btnSoft" onClick={() => removeComment(student.id)}>
+                Remove comment
+              </button>
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+    return (
+      <button
+        className="btnSoft"
+        onClick={() => {
+          const text = window.prompt("Add a comment to hold this profile");
+          if (text && text.trim()) setComment(student.id, text.trim());
+        }}
+      >
+        Add super-admin comment
+      </button>
     );
   }
 
@@ -1207,7 +1291,8 @@ export function OpsApp() {
         </div>
       );
     }
-    const ready = Boolean(user && (user.role === "akash" || isSuper(user, appConfig)) && stage === "pending_akash" && sectionDone(record, appConfig.akashFields, "akash"));
+    const blocked = hasComment(record);
+    const ready = Boolean(user && (user.role === "akash" || isSuper(user, appConfig)) && stage === "pending_akash" && sectionDone(record, appConfig.akashFields, "akash") && !blocked);
     if (stage === "approved") {
       return (
         <>
@@ -1223,7 +1308,7 @@ export function OpsApp() {
     return (
       <div className="approw">
         <button className={`btnClose ${ready ? "ready" : "notready"}`} disabled={!ready} onClick={() => approve(student.id, "akash")}>
-          {stageOrder(stage) < 2 ? "Waiting for earlier approvals" : "Approve and enrol"}
+          {blocked ? "On hold - super-admin comment" : stageOrder(stage) < 2 ? "Waiting for earlier approvals" : "Approve and enrol"}
         </button>
         {stage === "pending_akash" && user && (user.role === "akash" || isSuper(user, appConfig)) ? (
           <button className="btnSoft" onClick={() => simpleWorkflow(student.id, "send-back", { note: window.prompt("Send back note") || "" }, "Sent back")}>

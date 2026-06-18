@@ -21,6 +21,7 @@ from .logic import (
     confirm_done,
     delete_user,
     get_student,
+    has_comment,
     get_user_by_email,
     get_user_with_password,
     kyp_done,
@@ -46,6 +47,7 @@ from .logic import (
 from .models import (
     ApproveRequest,
     BatchPatch,
+    CommentRequest,
     ConfirmPatch,
     ImportPayload,
     LoginRequest,
@@ -331,6 +333,7 @@ def approve(student_id: str, payload: ApproveRequest, user: dict[str, Any] = Dep
         else:
             require((user.get("role") == "akash" or user.get("name") in {"Akash", "Abhimanyu", "Ruchir"}) and stage == STAGE["AKASH"], "Akash approval is locked")
             require(akash_done(rec), "Fill all Akash fields first")
+            require(not has_comment(rec), "Resolve the super-admin comment before enrolling")
             updated = set_rec(
                 con,
                 student_id,
@@ -393,6 +396,23 @@ def publish_kyp(student_id: str, user: dict[str, Any] = Depends(current_user)) -
         kyp = dict(rec.get("kyp") or {})
         kyp.update({"published": True, "publishedBy": user["name"], "publishedAt": now_stamp()})
         updated = set_rec(con, student_id, {"kyp": kyp})
+        return {"ok": True, "record": updated}
+
+
+@app.post("/api/workflows/{student_id}/comment")
+def add_comment(student_id: str, payload: CommentRequest, user: dict[str, Any] = Depends(require_super)) -> dict[str, Any]:
+    with session() as con:
+        get_student(con, student_id)
+        comment = {"text": payload.text.strip(), "by": user["name"], "at": now_stamp()}
+        updated = set_rec(con, student_id, {"comment": comment})
+        return {"ok": True, "record": updated}
+
+
+@app.delete("/api/workflows/{student_id}/comment")
+def clear_comment(student_id: str, _: dict[str, Any] = Depends(require_super)) -> dict[str, Any]:
+    with session() as con:
+        get_student(con, student_id)
+        updated = set_rec(con, student_id, {"comment": None})
         return {"ok": True, "record": updated}
 
 
