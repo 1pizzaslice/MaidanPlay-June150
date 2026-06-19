@@ -114,11 +114,14 @@ function confirmDone(record: Workflow, config: AppConfig) {
 function condMet(record: Workflow, field: FieldDef, section: "amit" | "akash" | "kyp") {
   if (!field.when) return true;
   const [key, expected] = field.when.split("=");
-  return (record[section] || {})[key] === expected;
+  // "key=A|B" means the field is shown when the controlling value is A *or* B.
+  return expected.split("|").includes((record[section] || {})[key] as string);
 }
 
 function valueGreen(record: Workflow, field: FieldDef, section: "amit" | "akash" | "kyp") {
   if (!condMet(record, field, section)) return true;
+  // Optional fields never block stage completion (e.g. partial cash/UPI splits).
+  if (field.optional) return true;
   const value = (record[section] || {})[field.key];
   if (field.type === "cleared") return value === true;
   if (field.type === "yesno") return field.greenOn ? value === field.greenOn : value === "Yes" || value === "No";
@@ -1250,6 +1253,14 @@ export function OpsApp() {
               </option>
             ))}
           </select>
+        ) : field.type === "text" ? (
+          <input
+            className="vfInput"
+            defaultValue={String(value || "")}
+            disabled={!editable}
+            placeholder="Enter details"
+            onBlur={(event) => mutateSection(studentId, section, field.key, event.currentTarget.value)}
+          />
         ) : (
           <input
             className="vfInput"

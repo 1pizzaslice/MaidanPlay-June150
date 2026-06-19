@@ -37,12 +37,13 @@ export type FieldDef = {
   o1?: string;
   o2?: string;
   o3?: string;
-  input?: "text" | "num" | "date" | "select" | "school";
+  input?: "text" | "num" | "date" | "select" | "school" | "phones";
   extra?: string;
-  type?: "cleared" | "yesno" | "choice" | "select" | "value";
+  type?: "cleared" | "yesno" | "choice" | "select" | "value" | "text";
   choices?: string[];
   when?: string;
   greenOn?: string;
+  optional?: boolean;
 };
 
 export type ConfirmValue = {

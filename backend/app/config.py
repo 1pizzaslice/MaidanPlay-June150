@@ -87,7 +87,7 @@ CONFIRM_FIELDS = [
         "o3": "Corrected name",
         "extra": "Relationship (e.g. Father)",
     },
-    {"key": "phone", "label": "WhatsApp Number", "src": "phone", "o3": "Corrected number", "input": "num"},
+    {"key": "phone", "label": "WhatsApp Number(s)", "src": "phone", "o3": "Corrected number(s) - separate multiple with commas", "input": "phones"},
     {"key": "email", "label": "Email", "src": "email", "o3": "Corrected email"},
     {
         "key": "jersey",
@@ -123,12 +123,20 @@ AKASH_FIELDS = [
         "key": "paymentType",
         "label": "Payment type",
         "type": "select",
-        "choices": ["Cash", "Cheque", "Credit Card", "Debit Card", "UPI", "Others"],
+        "choices": ["Cash", "Cheque", "Credit Card", "Debit Card", "UPI", "Combination", "Others"],
     },
-    {"key": "cashFeeValue", "label": "Cash fee value", "type": "value", "when": "paymentType=Cash"},
+    # Cash / UPI amounts are optional: some pay partly in cash and partly via UPI
+    # (Combination), so neither sub-amount is mandatory on its own.
+    {"key": "cashFeeValue", "label": "Cash amount", "type": "value", "when": "paymentType=Cash|Combination", "optional": True},
+    {"key": "upiFeeValue", "label": "UPI amount", "type": "value", "when": "paymentType=UPI|Combination", "optional": True},
+    {"key": "paymentTo", "label": "Payment made to", "type": "select", "choices": ["Sunai", "Kush", "Coach", "MaidanPlay"]},
+    {"key": "paymentSplit", "label": "How much given to whom (e.g. 5000 Sunai, 3000 Coach)", "type": "text", "optional": True},
     {"key": "noDuesMail", "label": "No-dues mail shared", "type": "yesno"},
     {"key": "legalSigned", "label": "Legal policies signed", "type": "yesno"},
+    {"key": "kitFeesPaid", "label": "Onboarding kit fees paid", "type": "yesno"},
     {"key": "kitDelivered", "label": "Onboarding Kit Delivered", "type": "yesno", "greenOn": "Yes"},
+    {"key": "kitPaidTo", "label": "Kit fees paid to", "type": "select", "choices": ["Sunai", "Kush", "Coach", "MaidanPlay"], "when": "kitFeesPaid=Yes"},
+    {"key": "kitPaidAmount", "label": "Kit fees amount", "type": "value", "when": "kitFeesPaid=Yes", "optional": True},
 ]
 
 GREEN_TARGET = 150

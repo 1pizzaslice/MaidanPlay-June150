@@ -500,11 +500,16 @@ def cond_met(rec: dict[str, Any], field: dict[str, Any], section: str) -> bool:
     if not when:
         return True
     key, expected = when.split("=", 1)
-    return (rec.get(section) or {}).get(key) == expected
+    actual = (rec.get(section) or {}).get(key)
+    # "key=A|B" means the field is shown when the controlling value is A *or* B.
+    return actual in expected.split("|")
 
 
 def val_green(rec: dict[str, Any], field: dict[str, Any], section: str) -> bool:
     if not cond_met(rec, field, section):
+        return True
+    # Optional fields never block stage completion (e.g. partial cash/UPI splits).
+    if field.get("optional"):
         return True
     value = (rec.get(section) or {}).get(field["key"])
     field_type = field.get("type")
@@ -621,9 +626,15 @@ def build_clean_record(student: dict[str, Any], rec: dict[str, Any], cfg: dict[s
         "invoiceShared": akash.get("invoiceShared") or "",
         "paymentType": akash.get("paymentType") or "",
         "cashFeeValue": akash.get("cashFeeValue") or "",
+        "upiFeeValue": akash.get("upiFeeValue") or "",
+        "paymentTo": akash.get("paymentTo") or "",
+        "paymentSplit": akash.get("paymentSplit") or "",
         "noDuesMail": akash.get("noDuesMail") or "",
         "legalSigned": akash.get("legalSigned") or "",
+        "kitFeesPaid": akash.get("kitFeesPaid") or "",
         "kitDelivered": akash.get("kitDelivered") or "",
+        "kitPaidTo": akash.get("kitPaidTo") or "",
+        "kitPaidAmount": akash.get("kitPaidAmount") or "",
         "position": kyp.get("position") or "",
         "club": kyp.get("club") or "",
         "foot": kyp.get("foot") or "",
